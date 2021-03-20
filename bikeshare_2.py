@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import pandas as pd
 import numpy as np
 
@@ -118,7 +119,7 @@ def station_stats(df):
     print('-'*40)
 
 
-def trip_duration_stats(df):
+def trip_duration_stats(df, timeformat='m'):
     """Displays statistics on the total and average trip duration."""
 
     print('\nCalculating Trip Duration...\n')
@@ -127,7 +128,12 @@ def trip_duration_stats(df):
     total = df['Trip Duration'].sum()
     # display mean travel time
     mean = df['Trip Duration'].mean()
-    print('\n Total Travel Time = {:.4f} minutes and mean of Travel Time is {:.4f} minutes'.format(total/60, mean/60))
+    if timeformat == 'm' or timeformat == 'minutes':
+        print('\n Total Travel Time = {:.4f} minutes\nMean of Travel Time is {:.4f} minutes'.format(total/60, mean/60))
+    elif timeformat == 's' or timeformat == 'seconds':
+        print('\n Total Travel Time = {:.4f} seconds\nMean of Travel Time is {:.4f} seconds'.format(total, mean))
+    elif timeformat == 'h' or timeformat == 'hours':
+        print('\n Total Travel Time = {:.4f} hours\nMean of Travel Time is {:.4f} hour(s)'.format(total/3600, mean/3600))
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
 
@@ -140,24 +146,25 @@ def user_stats(df):
 
     # Display counts of user types
     user_types = df['User Type'].value_counts()
-    print('Counts of user Types is: \n', user_types)
+    print('Counts of user Types is:\n', user_types)
     try:
         # Display counts of gender
         gender = df['Gender'].dropna()
         count_gender = gender.value_counts()
-        print('Counts of Genders is: \n', count_gender)
+        print('Counts of Genders is:\n', count_gender)
     except KeyError:
         print("There's no available gender for Washington stats")
     # Display earliest, most recent, and most common year of birth
     try:
+        now = datetime.now().year
         birth_year = df['Birth Year'].dropna()
         oldest = pd.Series.min(birth_year)
         youngest = pd.Series.max(birth_year)
         common_birth = pd.Series.mode(birth_year)[0]
+        print('Oldest User Birth Year: ', oldest, '\nTheir age now is', int(now-oldest))
+        print('Youngest User Birth Year: ', youngest, '\nTheir age now is', int(now-youngest))
+        print('Most Common User Birth Year: ', common_birth, '\nTherefore most of bikeshare user are at age of', now-common_birth)
         print("\nThis took %s seconds." % (time.time() - start_time))
-        print('Oldest User Birth Year: ', oldest)
-        print('Youngest User Birth Year: ', youngest)
-        print('Most Common User Birth Year: ', common_birth)
     except KeyError:
         print("Theres no available birth year for Washington stats")
     print('-'*40)
@@ -170,7 +177,12 @@ def main():
 
         time_stats(df)
         station_stats(df)
-        trip_duration_stats(df)
+        timeformat=''
+        while timeformat not in ['h', 's', 'm']:
+            timeformat= input('Would You like Trip Duration Statistics to be displayed in\nMinutes(m), Hours(h) or Seconds(s)? \t Default is Minutes\n').lower()
+            if timeformat not in ['h', 's']:
+                timeformat = 'm'
+        trip_duration_stats(df, timeformat)
         user_stats(df)
 
         restart = input('\nWould you like to restart? Enter yes or no.\n')
